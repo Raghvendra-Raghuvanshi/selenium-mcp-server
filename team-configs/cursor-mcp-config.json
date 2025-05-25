@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "selenium": {
+      "url": "http://YOUR_SERVER_IP:8931/sse"
+    }
+  }
+}
