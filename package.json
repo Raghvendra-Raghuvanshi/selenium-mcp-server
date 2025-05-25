@@ -32,12 +32,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/raghvendraraghuvanshi/selenium-mcp-server.git"
+    "url": "git+https://github.com/Raghvendra-Raghuvanshi/selenium-mcp-server.git"
   },
   "bugs": {
-    "url": "https://github.com/raghvendraraghuvanshi/selenium-mcp-server/issues"
+    "url": "https://github.com/Raghvendra-Raghuvanshi/selenium-mcp-server/issues"
   },
-  "homepage": "https://github.com/raghvendraraghuvanshi/selenium-mcp-server#readme",
+  "homepage": "https://github.com/Raghvendra-Raghuvanshi/selenium-mcp-server#readme",
   "engines": {
     "node": ">=18.0.0"
   },
