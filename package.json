@@ -58,9 +58,10 @@
     "typescript": "^5.0.0"
   },
   "files": [
-    "dist/**/*",
-    "lib/**/*",
+    "dist/",
+    "lib/",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ]
 }
