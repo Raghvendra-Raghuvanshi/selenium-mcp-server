@@ -14,28 +14,49 @@ A Model Context Protocol (MCP) server that provides browser automation capabilit
 
 ## Installation
 
+### Method 1: Local Installation (Recommended - Like Playwright MCP)
+
 ```bash
-npm install -g selenium-mcp-server
+npm install selenium-mcp-server
 ```
 
-Or use with npx:
+### Method 2: Global Installation
 
 ```bash
-npx selenium-mcp-server
+npm install -g selenium-mcp-server
 ```
 
 ## Quick Start
 
-### 1. Install the package
+### Option A: Local Installation (Like Microsoft's Playwright MCP)
 
+#### 1. Install in your project
+```bash
+npm install selenium-mcp-server
+```
+
+#### 2. Configure Cursor
+Create `.cursor/mcp.json` in your project root:
+```json
+{
+  "mcpServers": {
+    "selenium": {
+      "command": "node",
+      "args": ["./node_modules/selenium-mcp-server/dist/index.js", "--browser", "chrome", "--headless"]
+    }
+  }
+}
+```
+
+### Option B: Global Installation
+
+#### 1. Install globally
 ```bash
 npm install -g selenium-mcp-server
 ```
 
-### 2. Configure Cursor
-
+#### 2. Configure Cursor
 Add to your Cursor MCP configuration (`~/.cursor/mcp.json`):
-
 ```json
 {
   "mcpServers": {
@@ -197,7 +218,7 @@ If you get browser not found errors:
 On macOS, you might need to grant accessibility permissions:
 
 1. Go to System Preferences > Security & Privacy > Privacy
-2. Select "Accessibility" 
+2. Select "Accessibility"
 3. Add your terminal application
 
 ### Memory Issues

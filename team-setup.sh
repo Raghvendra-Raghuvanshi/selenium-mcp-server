@@ -33,16 +33,42 @@ fi
 echo "✅ Prerequisites check passed"
 echo ""
 
-# Install the package
-echo "📦 Installing selenium-mcp-server..."
-if command -v npm &> /dev/null; then
-    npm install -g selenium-mcp-server
-elif command -v yarn &> /dev/null; then
-    yarn global add selenium-mcp-server
-else
-    echo "❌ Neither npm nor yarn found. Please install Node.js first."
-    exit 1
-fi
+# Choose installation method
+echo "📦 Choose installation method:"
+echo "1. Local installation (recommended - like Playwright MCP)"
+echo "2. Global installation"
+read -p "Enter choice (1 or 2): " choice
+
+case $choice in
+    1)
+        echo "📦 Installing selenium-mcp-server locally..."
+        if command -v npm &> /dev/null; then
+            npm install selenium-mcp-server
+        elif command -v yarn &> /dev/null; then
+            yarn add selenium-mcp-server
+        else
+            echo "❌ Neither npm nor yarn found. Please install Node.js first."
+            exit 1
+        fi
+        INSTALL_TYPE="local"
+        ;;
+    2)
+        echo "📦 Installing selenium-mcp-server globally..."
+        if command -v npm &> /dev/null; then
+            npm install -g selenium-mcp-server
+        elif command -v yarn &> /dev/null; then
+            yarn global add selenium-mcp-server
+        else
+            echo "❌ Neither npm nor yarn found. Please install Node.js first."
+            exit 1
+        fi
+        INSTALL_TYPE="global"
+        ;;
+    *)
+        echo "❌ Invalid choice. Please run the script again."
+        exit 1
+        ;;
+esac
 
 echo "✅ Package installed successfully"
 echo ""
@@ -59,31 +85,51 @@ fi
 # Create Cursor configuration
 echo "⚙️  Configuring Cursor..."
 
-# Create global Cursor config directory
-CURSOR_CONFIG_DIR="$HOME/.cursor"
-mkdir -p "$CURSOR_CONFIG_DIR"
+if [ "$INSTALL_TYPE" = "local" ]; then
+    # Local installation - create project-specific config
+    CURSOR_CONFIG_DIR=".cursor"
+    mkdir -p "$CURSOR_CONFIG_DIR"
+    CURSOR_CONFIG_FILE="$CURSOR_CONFIG_DIR/mcp.json"
 
-CURSOR_CONFIG_FILE="$CURSOR_CONFIG_DIR/mcp.json"
-
-# Check if config file exists
-if [ -f "$CURSOR_CONFIG_FILE" ]; then
-    echo "📝 Updating existing Cursor MCP configuration..."
-    # Backup existing config
-    cp "$CURSOR_CONFIG_FILE" "$CURSOR_CONFIG_FILE.backup.$(date +%Y%m%d_%H%M%S)"
-    echo "   (Backup created: $CURSOR_CONFIG_FILE.backup.$(date +%Y%m%d_%H%M%S))"
-    
-    # Check if selenium server already exists
-    if grep -q '"selenium"' "$CURSOR_CONFIG_FILE"; then
-        echo "   Selenium MCP server already configured in Cursor"
-    else
-        echo "   Adding selenium server to existing configuration..."
-        # This is a simple merge - for complex configs, teams should merge manually
-        echo "   Please manually add the selenium configuration to your existing mcp.json"
-        echo "   See the example configuration below."
-    fi
-else
-    echo "📝 Creating new Cursor MCP configuration..."
+    echo "📝 Creating project-specific Cursor MCP configuration..."
     cat > "$CURSOR_CONFIG_FILE" << 'EOF'
+{
+  "mcpServers": {
+    "selenium": {
+      "command": "node",
+      "args": ["./node_modules/selenium-mcp-server/dist/index.js", "--browser", "chrome", "--headless"]
+    }
+  }
+}
+EOF
+    echo "✅ Configuration created at: $CURSOR_CONFIG_FILE"
+    echo "📋 This configuration will be used for this project only."
+    echo "💡 Consider committing .cursor/mcp.json to share with your team!"
+
+else
+    # Global installation - create global config
+    CURSOR_CONFIG_DIR="$HOME/.cursor"
+    mkdir -p "$CURSOR_CONFIG_DIR"
+    CURSOR_CONFIG_FILE="$CURSOR_CONFIG_DIR/mcp.json"
+
+    # Check if config file exists
+    if [ -f "$CURSOR_CONFIG_FILE" ]; then
+        echo "📝 Updating existing Cursor MCP configuration..."
+        # Backup existing config
+        cp "$CURSOR_CONFIG_FILE" "$CURSOR_CONFIG_FILE.backup.$(date +%Y%m%d_%H%M%S)"
+        echo "   (Backup created: $CURSOR_CONFIG_FILE.backup.$(date +%Y%m%d_%H%M%S))"
+
+        # Check if selenium server already exists
+        if grep -q '"selenium"' "$CURSOR_CONFIG_FILE"; then
+            echo "   Selenium MCP server already configured in Cursor"
+        else
+            echo "   Adding selenium server to existing configuration..."
+            echo "   Please manually add the selenium configuration to your existing mcp.json"
+            echo "   See the example configuration below."
+        fi
+    else
+        echo "📝 Creating new global Cursor MCP configuration..."
+        cat > "$CURSOR_CONFIG_FILE" << 'EOF'
 {
   "mcpServers": {
     "selenium": {
@@ -93,7 +139,8 @@ else
   }
 }
 EOF
-    echo "✅ Configuration created at: $CURSOR_CONFIG_FILE"
+        echo "✅ Configuration created at: $CURSOR_CONFIG_FILE"
+    fi
 fi
 
 echo ""
