@@ -1,27 +1,29 @@
 # Selenium MCP Server - Quick Reference
 
-## 🚀 Installation (30 seconds)
+## 🚀 Zero-Installation Setup (30 seconds)
 
-```bash
-npm install -g selenium-mcp-server
-```
+No installation needed! Just add configuration to Cursor.
 
 ## ⚙️ Cursor Configuration
 
-Create `~/.cursor/mcp.json`:
+Create `.cursor/mcp.json` in your project:
 
 ```json
 {
   "mcpServers": {
     "selenium": {
-      "command": "selenium-mcp",
-      "args": ["--browser", "chrome", "--headless"]
+      "command": "npx",
+      "args": [
+        "selenium-mcp-server@latest",
+        "--browser", "chrome",
+        "--headless"
+      ]
     }
   }
 }
 ```
 
-**Restart Cursor** after configuration.
+**Restart Cursor** after configuration. npx will automatically download and run the server.
 
 ## 💬 Example Commands
 
@@ -44,8 +46,9 @@ Ask Cursor these questions:
 {
   "mcpServers": {
     "selenium": {
-      "command": "selenium-mcp",
+      "command": "npx",
       "args": [
+        "selenium-mcp-server@latest",
         "--browser", "chrome",           // chrome, firefox, edge, safari
         "--headless",                    // run without GUI
         "--viewport-size", "1920,1080",  // screen resolution
@@ -60,10 +63,10 @@ Ask Cursor these questions:
 
 | Problem | Solution |
 |---------|----------|
-| "Command not found" | `npm install -g selenium-mcp-server` |
+| "npx command failed" | Check internet connection, try again |
 | "Java not found" | Install Java 11+ from [adoptium.net](https://adoptium.net/) |
 | "Browser not found" | Install Chrome or specify `--executable-path` |
-| "Cursor not detecting" | Restart Cursor completely, check `~/.cursor/mcp.json` |
+| "Cursor not detecting" | Restart Cursor completely, check `.cursor/mcp.json` |
 
 ## 📚 More Info
 

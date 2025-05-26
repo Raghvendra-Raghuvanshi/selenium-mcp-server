@@ -14,21 +14,72 @@ A Model Context Protocol (MCP) server that provides browser automation capabilit
 
 ## Installation
 
-### Method 1: Local Installation (Recommended - Like Playwright MCP)
+### 🚀 **Zero-Installation Setup (Recommended - Just Like Playwright MCP)**
 
+No installation needed! Just add configuration to Cursor:
+
+```json
+{
+  "mcpServers": {
+    "selenium": {
+      "command": "npx",
+      "args": [
+        "selenium-mcp-server@latest",
+        "--browser", "chrome",
+        "--headless"
+      ]
+    }
+  }
+}
+```
+
+### Alternative Installation Methods
+
+<details>
+<summary>Click to see other installation options</summary>
+
+#### Method 1: Local Installation
 ```bash
 npm install selenium-mcp-server
 ```
 
-### Method 2: Global Installation
-
+#### Method 2: Global Installation
 ```bash
 npm install -g selenium-mcp-server
 ```
 
+</details>
+
 ## Quick Start
 
-### Option A: Local Installation (Like Microsoft's Playwright MCP)
+### 🎯 **Zero-Installation (Recommended)**
+
+#### 1. Add Configuration
+Create `.cursor/mcp.json` in your project root:
+```json
+{
+  "mcpServers": {
+    "selenium": {
+      "command": "npx",
+      "args": [
+        "selenium-mcp-server@latest",
+        "--browser", "chrome",
+        "--headless"
+      ]
+    }
+  }
+}
+```
+
+#### 2. Restart Cursor
+- Quit Cursor completely
+- Restart Cursor
+- npx will automatically download and run the server
+
+<details>
+<summary>Alternative Setup Methods</summary>
+
+### Option A: Local Installation
 
 #### 1. Install in your project
 ```bash
@@ -36,7 +87,6 @@ npm install selenium-mcp-server
 ```
 
 #### 2. Configure Cursor
-Create `.cursor/mcp.json` in your project root:
 ```json
 {
   "mcpServers": {
@@ -56,7 +106,6 @@ npm install -g selenium-mcp-server
 ```
 
 #### 2. Configure Cursor
-Add to your Cursor MCP configuration (`~/.cursor/mcp.json`):
 ```json
 {
   "mcpServers": {
@@ -67,6 +116,8 @@ Add to your Cursor MCP configuration (`~/.cursor/mcp.json`):
   }
 }
 ```
+
+</details>
 
 ### 3. Use in Cursor
 
