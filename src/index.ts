@@ -87,6 +87,7 @@ class SeleniumMCPServer {
 
   private setupHandlers() {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+      console.error("Received ListTools request");
       return {
         tools: [
           {
@@ -199,6 +200,7 @@ class SeleniumMCPServer {
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
+      console.error(`Received CallTool request: ${name}`);
 
       try {
         // For now, return a simple response indicating the tool would be executed
@@ -273,8 +275,15 @@ class SeleniumMCPServer {
 
   async run() {
     const transport = new StdioServerTransport();
+
+    // Add debug logging
+    console.error("Selenium MCP server starting...");
+
     await this.server.connect(transport);
     console.error("Selenium MCP server running on stdio");
+
+    // Log that we're ready
+    console.error("Server ready for MCP connections");
   }
 
   async close() {

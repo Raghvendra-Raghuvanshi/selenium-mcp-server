@@ -44,7 +44,8 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.4.0",
     "commander": "^11.0.0",
-    "cross-spawn": "^7.0.3"
+    "cross-spawn": "^7.0.3",
+    "selenium-mcp-server": "^0.1.5"
   },
   "devDependencies": {
     "@types/cross-spawn": "^6.0.2",
