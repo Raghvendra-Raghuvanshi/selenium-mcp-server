@@ -2,7 +2,7 @@
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import { CallToolRequestSchema, ListToolsRequestSchema, InitializeRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { spawn, ChildProcess } from "child_process";
 import { Command } from "commander";
 import * as path from "path";
@@ -86,6 +86,21 @@ class SeleniumMCPServer {
   }
 
   private setupHandlers() {
+    // Handle initialization
+    this.server.setRequestHandler(InitializeRequestSchema, async (request) => {
+      console.error("Received initialize request");
+      return {
+        protocolVersion: "2024-11-05",
+        capabilities: {
+          tools: {},
+        },
+        serverInfo: {
+          name: "selenium-mcp-server",
+          version: "0.1.6",
+        },
+      };
+    });
+
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
       console.error("Received ListTools request");
       return {
