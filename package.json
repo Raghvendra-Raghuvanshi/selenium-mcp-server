@@ -1,6 +1,6 @@
 {
   "name": "selenium-mcp-server",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Model Context Protocol server for Selenium WebDriver - enables LLMs to control web browsers",
   "type": "module",
   "main": "dist/index.js",
