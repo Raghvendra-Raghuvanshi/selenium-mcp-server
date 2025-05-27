@@ -319,7 +319,10 @@ async function main() {
   await server.run();
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Check if this file is being run directly
+const isMainModule = process.argv[1] && import.meta.url === `file://${path.resolve(process.argv[1])}`;
+
+if (isMainModule) {
   main().catch((error) => {
     console.error("Fatal error:", error);
     process.exit(1);
