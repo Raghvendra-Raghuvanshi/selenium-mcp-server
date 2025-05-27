@@ -25,8 +25,7 @@ No installation needed! Just add configuration to Cursor:
       "command": "npx",
       "args": [
         "selenium-mcp-server@latest",
-        "--browser", "chrome",
-        "--headless"
+        "--browser", "chrome"
       ]
     }
   }
@@ -63,8 +62,7 @@ Create `.cursor/mcp.json` in your project root:
       "command": "npx",
       "args": [
         "selenium-mcp-server@latest",
-        "--browser", "chrome",
-        "--headless"
+        "--browser", "chrome"
       ]
     }
   }

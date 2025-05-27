@@ -15,8 +15,7 @@ Create `.cursor/mcp.json` in your project:
       "command": "npx",
       "args": [
         "selenium-mcp-server@latest",
-        "--browser", "chrome",
-        "--headless"
+        "--browser", "chrome"
       ]
     }
   }
@@ -50,9 +49,9 @@ Ask Cursor these questions:
       "args": [
         "selenium-mcp-server@latest",
         "--browser", "chrome",           // chrome, firefox, edge, safari
-        "--headless",                    // run without GUI
-        "--viewport-size", "1920,1080",  // screen resolution
-        "--output-dir", "./screenshots"  // save location
+        "--headless",                    // optional: run without GUI
+        "--viewport-size", "1920,1080",  // optional: screen resolution
+        "--output-dir", "./screenshots"  // optional: save location
       ]
     }
   }

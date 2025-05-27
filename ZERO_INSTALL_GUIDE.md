@@ -12,13 +12,16 @@ Teams just add this configuration to Cursor and it works immediately:
   "mcpServers": {
     "selenium": {
       "command": "npx",
-      "args": ["selenium-mcp-server@latest"]
+      "args": [
+        "selenium-mcp-server@latest",
+        "--browser", "chrome"
+      ]
     }
   }
 }
 ```
 
-### **Production Configuration**
+### **Headless Configuration (for CI/CD)**
 ```json
 {
   "mcpServers": {
@@ -59,8 +62,7 @@ Create or edit `.cursor/mcp.json` in your project:
       "command": "npx",
       "args": [
         "selenium-mcp-server@latest",
-        "--browser", "chrome",
-        "--headless"
+        "--browser", "chrome"
       ]
     }
   }
@@ -85,11 +87,11 @@ Ask Cursor: *"Navigate to google.com and take a screenshot"*
   "mcpServers": {
     "selenium-chrome": {
       "command": "npx",
-      "args": ["selenium-mcp-server@latest", "--browser", "chrome", "--headless"]
+      "args": ["selenium-mcp-server@latest", "--browser", "chrome"]
     },
     "selenium-firefox": {
       "command": "npx",
-      "args": ["selenium-mcp-server@latest", "--browser", "firefox", "--headless"]
+      "args": ["selenium-mcp-server@latest", "--browser", "firefox"]
     }
   }
 }
@@ -125,7 +127,6 @@ Ask Cursor: *"Navigate to google.com and take a screenshot"*
       "args": [
         "selenium-mcp-server@latest",
         "--browser", "chrome",
-        "--headless",
         "--output-dir", "./automation-outputs"
       ]
     }
