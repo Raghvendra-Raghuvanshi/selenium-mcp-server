@@ -1,32 +1,57 @@
 # Selenium MCP Server
 
-A Model Context Protocol (MCP) server that provides browser automation capabilities using Selenium WebDriver. This server enables LLMs to interact with web pages through structured accessibility snapshots and browser automation tools.
+A Model Context Protocol (MCP) server that provides browser automation capabilities using Puppeteer. This server enables LLMs to interact with web pages through structured accessibility snapshots and real browser automation.
 
-## Features
+## 🚀 Key Features
 
-- 🌐 **Multi-browser support**: Chrome, Firefox, Edge, Safari
-- 🤖 **LLM-friendly**: Provides structured accessibility snapshots for LLMs
-- 🔧 **Comprehensive tools**: Navigate, click, type, screenshot, and more
-- 📱 **Tab management**: Open, close, and switch between browser tabs
-- 🎯 **Element interaction**: Click, hover, drag, type into elements
-- 📸 **Screenshots and PDFs**: Capture page content
-- ⚡ **Fast and reliable**: Built on Selenium WebDriver
+- **Real Browser Automation**: Uses Puppeteer for actual browser control (not simulated)
+- **Team-Friendly**: Visible browser by default so teams can see automation in action
+- **MCP Compliant**: Follows MCP standards like Microsoft's Playwright MCP
+- **Local Dependencies**: No global npm installation required
+- **Accessibility-First**: Uses element snapshots for reliable automation
 
-## Installation
+## 📋 Available Tools
 
-### 🚀 **Zero-Installation Setup (Recommended - Just Like Playwright MCP)**
+- **`browser_navigate`** - Navigate to any URL
+- **`browser_snapshot`** - Get page accessibility snapshot with element references
+- **`browser_click`** - Click on elements using references from snapshots
+- **`browser_type`** - Type text into form fields with optional submission
+- **`browser_wait_for`** - Wait for time, text to appear, or text to disappear
+- **`browser_take_screenshot`** - Capture screenshots of the current page
 
-No installation needed! Just add configuration to Cursor:
+## 🛠️ Installation & Setup
+
+### For Cursor Users
+
+1. **Add to Cursor Settings**:
+   - Go to `Cursor Settings` → `MCP` → `Add new MCP Server`
+   - Name: `selenium-mcp`
+   - Command type: `command`
+   - Command: `npx`
+   - Arguments: `["selenium-mcp-server@latest"]`
+
+2. **Alternative JSON Configuration**:
+```json
+{
+  "mcpServers": {
+    "selenium-mcp": {
+      "command": "npx",
+      "args": ["selenium-mcp-server@latest"]
+    }
+  }
+}
+```
+
+### For Other MCP Clients
+
+Use the same configuration pattern with your MCP client:
 
 ```json
 {
   "mcpServers": {
-    "selenium": {
+    "selenium-mcp": {
       "command": "npx",
-      "args": [
-        "selenium-mcp-server@latest",
-        "--browser", "chrome"
-      ]
+      "args": ["selenium-mcp-server@latest"]
     }
   }
 }

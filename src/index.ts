@@ -9,6 +9,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { fileURLToPath } from 'url';
 import { promisify } from 'util';
+import puppeteer, { Browser, Page } from 'puppeteer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -24,36 +25,131 @@ interface SeleniumMCPOptions {
   outputDir?: string;
 }
 
-class SimpleBrowserAutomation {
-  private browser: string;
-  private headless: boolean;
+class PuppeteerBrowserAutomation {
+  private browser: Browser | null = null;
+  private page: Page | null = null;
+  private options: SeleniumMCPOptions;
 
   constructor(options: SeleniumMCPOptions = {}) {
-    this.browser = options.browser || 'chrome';
-    this.headless = options.headless || false;
+    this.options = options;
+  }
+
+  private async ensureBrowser(): Promise<void> {
+    try {
+      // Check if browser is still connected
+      if (this.browser && !this.browser.isConnected()) {
+        console.error('Browser disconnected, cleaning up...');
+        this.browser = null;
+        this.page = null;
+      }
+
+      // Check if page is still valid
+      if (this.page && this.page.isClosed()) {
+        console.error('Page closed, creating new page...');
+        this.page = null;
+      }
+
+      if (!this.browser) {
+        console.error('Launching Puppeteer browser...');
+        this.browser = await puppeteer.launch({
+          headless: this.options.headless || false,
+          defaultViewport: null,
+          args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--disable-gpu',
+            '--disable-web-security',
+            '--disable-features=VizDisplayCompositor'
+          ]
+        });
+
+        // Handle browser disconnect
+        this.browser.on('disconnected', () => {
+          console.error('Browser disconnected');
+          this.browser = null;
+          this.page = null;
+        });
+      }
+
+      if (!this.page) {
+        this.page = await this.browser.newPage();
+
+        // Set viewport if specified
+        if (this.options.viewportSize) {
+          const [width, height] = this.options.viewportSize.split('x').map(Number);
+          await this.page.setViewport({ width, height });
+        }
+
+        // Handle page close
+        this.page.on('close', () => {
+          console.error('Page closed');
+          this.page = null;
+        });
+      }
+    } catch (error) {
+      console.error('Error ensuring browser:', error);
+      // Reset everything on error
+      this.browser = null;
+      this.page = null;
+      throw error;
+    }
   }
 
   async navigate(url: string): Promise<string> {
     try {
-      console.error(`Opening ${url} in ${this.browser}`);
+      await this.ensureBrowser();
+      console.error(`Navigating to ${url}`);
 
-      // Use system's open command to open URL in default browser
-      const command = process.platform === 'darwin' ? 'open' :
-                     process.platform === 'win32' ? 'start' : 'xdg-open';
+      // Add timeout and retry logic
+      const response = await this.page!.goto(url, {
+        waitUntil: 'networkidle2',
+        timeout: 30000
+      });
 
-      await execAsync(`${command} "${url}"`);
+      if (!response || !response.ok()) {
+        throw new Error(`Navigation failed with status: ${response?.status()}`);
+      }
 
-      return `Successfully opened ${url} in ${this.browser}`;
+      // Wait a bit more to ensure page is fully loaded
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const currentUrl = this.page!.url();
+      return `Successfully navigated to ${currentUrl}`;
     } catch (error) {
+      // If navigation fails, try to recover
+      console.error('Navigation error:', error);
+
+      // Reset page on navigation failure
+      if (this.page && !this.page.isClosed()) {
+        try {
+          await this.page.close();
+        } catch (e) {
+          // Ignore close errors
+        }
+      }
+      this.page = null;
+
       throw new Error(`Failed to navigate to ${url}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async takeScreenshot(filename?: string): Promise<string> {
     try {
-      // For now, return a message indicating screenshot would be taken
+      await this.ensureBrowser();
+
       const screenshotFile = filename || `screenshot-${Date.now()}.png`;
-      return `Screenshot would be saved as: ${screenshotFile}`;
+      const outputPath = path.join(this.options.outputDir || process.cwd(), screenshotFile);
+
+      await this.page!.screenshot({
+        path: outputPath,
+        fullPage: true
+      });
+
+      return `Screenshot saved as: ${outputPath}`;
     } catch (error) {
       throw new Error(`Failed to take screenshot: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -61,8 +157,60 @@ class SimpleBrowserAutomation {
 
   async getSnapshot(): Promise<string> {
     try {
-      // For now, return a simple page structure
-      return `Page snapshot: Current page is loaded and ready for interaction`;
+      await this.ensureBrowser();
+
+      // Check if page is valid and loaded
+      if (!this.page || this.page.isClosed()) {
+        throw new Error('No active page available');
+      }
+
+      // Get page title and URL
+      const title = await this.page.title();
+      const url = this.page.url();
+
+      // Check if we're on a valid page (not about:blank)
+      if (url === 'about:blank') {
+        return `Page snapshot:\nURL: ${url}\nTitle: ${title}\n\nNo page loaded yet. Please navigate to a URL first.`;
+      }
+
+      // Get all interactive elements with their text content
+      const elements = await this.page.evaluate(() => {
+        const doc = (globalThis as any).document;
+        const interactiveElements = doc.querySelectorAll(
+          'a, button, input, select, textarea, [onclick], [role="button"], [tabindex]'
+        );
+
+        return Array.from(interactiveElements).slice(0, 20).map((el: any, index: number) => {
+          const tagName = el.tagName.toLowerCase();
+          const text = el.textContent?.trim().slice(0, 50) || '';
+          const type = el.getAttribute('type') || '';
+          const placeholder = el.getAttribute('placeholder') || '';
+          const href = el.getAttribute('href') || '';
+          const name = el.getAttribute('name') || '';
+
+          return {
+            ref: `element-${index}`,
+            tag: tagName,
+            text: text,
+            type: type,
+            placeholder: placeholder,
+            href: href,
+            name: name
+          };
+        });
+      });
+
+      const snapshot = {
+        url,
+        title,
+        elements: elements.filter(el => el.text || el.placeholder || el.href || el.name)
+      };
+
+      return `Page snapshot:\nURL: ${url}\nTitle: ${title}\n\nInteractive elements:\n${
+        snapshot.elements.map(el =>
+          `- ${el.ref}: ${el.tag}${el.type ? `[${el.type}]` : ''} "${el.text || el.placeholder || el.name || el.href}"`
+        ).join('\n')
+      }`;
     } catch (error) {
       throw new Error(`Failed to get page snapshot: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -70,7 +218,38 @@ class SimpleBrowserAutomation {
 
   async click(element: string, ref: string): Promise<string> {
     try {
-      return `Would click on element: ${element} (ref: ${ref})`;
+      await this.ensureBrowser();
+
+      // Extract element index from ref (e.g., "element-5" -> 5)
+      const elementIndex = parseInt(ref.replace('element-', ''));
+
+      // Use evaluate to click the element directly
+      const clicked = await this.page!.evaluate((index: number) => {
+        const doc = (globalThis as any).document;
+        const interactiveElements = doc.querySelectorAll(
+          'a, button, input, select, textarea, [onclick], [role="button"], [tabindex]'
+        );
+
+        const targetElement = interactiveElements[index];
+        if (!targetElement) {
+          return false;
+        }
+
+        // Scroll into view
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Click the element
+        targetElement.click();
+        return true;
+      }, elementIndex);
+
+      if (!clicked) {
+        throw new Error(`Element not found: ${ref}`);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 500)); // Wait for any page changes
+
+      return `Successfully clicked on element: ${element} (${ref})`;
     } catch (error) {
       throw new Error(`Failed to click element: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -78,8 +257,75 @@ class SimpleBrowserAutomation {
 
   async type(element: string, ref: string, text: string, submit?: boolean): Promise<string> {
     try {
-      const action = submit ? `type "${text}" and submit` : `type "${text}"`;
-      return `Would ${action} in element: ${element} (ref: ${ref})`;
+      await this.ensureBrowser();
+
+      let elementFound = false;
+
+      // Try different approaches to find the element
+      if (ref.startsWith('element-')) {
+        // Extract element index from ref
+        const elementIndex = parseInt(ref.replace('element-', ''));
+
+        // Use evaluate to focus and clear the element, then use page.type
+        elementFound = await this.page!.evaluate((index: number) => {
+          const doc = (globalThis as any).document;
+          const interactiveElements = doc.querySelectorAll(
+            'a, button, input, select, textarea, [onclick], [role="button"], [tabindex]'
+          );
+
+          const targetElement = interactiveElements[index] as any;
+          if (!targetElement) {
+            return false;
+          }
+
+          // Scroll into view
+          targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+          // Focus the element
+          targetElement.focus();
+
+          // Clear existing text if it's an input element
+          if (targetElement.tagName === 'INPUT' || targetElement.tagName === 'TEXTAREA') {
+            targetElement.value = '';
+          }
+
+          return true;
+        }, elementIndex);
+      } else {
+        // Try as CSS selector
+        try {
+          const elementHandle = await this.page!.$(ref);
+          if (elementHandle) {
+            await elementHandle.focus();
+            await elementHandle.evaluate((el: any) => {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                el.value = '';
+              }
+            });
+            elementFound = true;
+          }
+        } catch (e) {
+          // CSS selector failed, continue to error
+        }
+      }
+
+      if (!elementFound) {
+        throw new Error(`Element not found: ${ref}`);
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 200)); // Wait for focus
+
+      // Type the text using page.type which simulates real typing
+      await this.page!.keyboard.type(text);
+
+      if (submit) {
+        await this.page!.keyboard.press('Enter');
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for potential navigation
+      }
+
+      const action = submit ? `typed "${text}" and submitted` : `typed "${text}"`;
+      return `Successfully ${action} in element: ${element} (${ref})`;
     } catch (error) {
       throw new Error(`Failed to type in element: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -87,18 +333,45 @@ class SimpleBrowserAutomation {
 
   async waitFor(options: { time?: number; text?: string; textGone?: string }): Promise<string> {
     try {
+      await this.ensureBrowser();
+
       if (options.time) {
         await new Promise(resolve => setTimeout(resolve, options.time! * 1000));
         return `Waited for ${options.time} seconds`;
       } else if (options.text) {
-        return `Would wait for text to appear: "${options.text}"`;
+        await this.page!.waitForFunction(
+          (text: string) => (globalThis as any).document.body.textContent?.includes(text),
+          { timeout: 30000 },
+          options.text
+        );
+        return `Successfully waited for text to appear: "${options.text}"`;
       } else if (options.textGone) {
-        return `Would wait for text to disappear: "${options.textGone}"`;
+        await this.page!.waitForFunction(
+          (text: string) => !(globalThis as any).document.body.textContent?.includes(text),
+          { timeout: 30000 },
+          options.textGone
+        );
+        return `Successfully waited for text to disappear: "${options.textGone}"`;
       } else {
         return `No wait condition specified`;
       }
     } catch (error) {
       throw new Error(`Failed to wait: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  async cleanup(): Promise<void> {
+    try {
+      if (this.page) {
+        await this.page.close();
+        this.page = null;
+      }
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+      }
+    } catch (error) {
+      console.error('Error during cleanup:', error);
     }
   }
 }
@@ -107,11 +380,11 @@ class SeleniumMCPServer {
   private server: Server;
   private javaProcess: ChildProcess | null = null;
   private options: SeleniumMCPOptions;
-  private browserAutomation: SimpleBrowserAutomation;
+  private browserAutomation: PuppeteerBrowserAutomation;
 
   constructor(options: SeleniumMCPOptions = {}) {
     this.options = options;
-    this.browserAutomation = new SimpleBrowserAutomation(options);
+    this.browserAutomation = new PuppeteerBrowserAutomation(options);
     this.server = new Server(
       {
         name: "selenium-mcp-server",
@@ -444,6 +717,9 @@ class SeleniumMCPServer {
   }
 
   async close() {
+    // Clean up browser automation
+    await this.browserAutomation.cleanup();
+
     if (this.javaProcess) {
       this.javaProcess.kill();
       this.javaProcess = null;
@@ -495,4 +771,4 @@ if (isMainModule) {
   });
 }
 
-export { SeleniumMCPServer };
+export { SeleniumMCPServer, PuppeteerBrowserAutomation };

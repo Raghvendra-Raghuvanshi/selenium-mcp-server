@@ -1,12 +1,12 @@
 {
   "name": "selenium-mcp-server",
-  "version": "0.1.8",
-  "description": "Model Context Protocol server for Selenium WebDriver - enables LLMs to control web browsers",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for browser automation using Puppeteer - enables LLMs to control web browsers with real automation capabilities",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/server.js",
+  "types": "dist/server.d.ts",
   "bin": {
-    "selenium-mcp": "dist/index.js"
+    "selenium-mcp": "dist/server.js"
   },
   "scripts": {
     "build": "node scripts/build.js",
@@ -44,7 +44,10 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.4.0",
     "commander": "^11.0.0",
-    "cross-spawn": "^7.0.3"
+    "cross-spawn": "^7.0.3",
+    "puppeteer": "^22.0.0",
+    "zod": "^3.25.32",
+    "zod-to-json-schema": "^3.24.5"
   },
   "devDependencies": {
     "@types/cross-spawn": "^6.0.2",

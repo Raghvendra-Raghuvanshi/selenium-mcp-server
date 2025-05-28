@@ -35,7 +35,9 @@ console.log('Copied JAR to lib directory');
 // Step 3: Build TypeScript
 console.log('Building TypeScript...');
 try {
-  execSync('npx tsc', { stdio: 'inherit', cwd: path.join(__dirname, '..') });
+  // Build the new MCP server files
+  execSync('npx tsc src/mcp-server.ts --outDir dist --target es2022 --module esnext --moduleResolution bundler --allowSyntheticDefaultImports --esModuleInterop', { stdio: 'inherit', cwd: path.join(__dirname, '..') });
+  execSync('npx tsc src/server.ts --outDir dist --target es2022 --module esnext --moduleResolution bundler --allowSyntheticDefaultImports --esModuleInterop', { stdio: 'inherit', cwd: path.join(__dirname, '..') });
 } catch (error) {
   console.error('Failed to build TypeScript:', error.message);
   process.exit(1);
