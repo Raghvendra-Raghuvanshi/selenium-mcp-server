@@ -75,6 +75,7 @@ class SeleniumMCPServer {
               time: args.time as number | undefined,
               text: args.text as string | undefined,
               textGone: args.textGone as string | undefined,
+              selector: args.selector as string | undefined,
             });
             return {
               content: [{ type: "text", text: waitResult }],
@@ -84,6 +85,22 @@ class SeleniumMCPServer {
             const screenshotResult = await this.browserAutomation.takeScreenshot(args.filename as string | undefined);
             return {
               content: [{ type: "text", text: screenshotResult }],
+            };
+
+          case "browser_get_frames":
+            const framesResult = await this.browserAutomation.getFrames();
+            return {
+              content: [{ type: "text", text: framesResult }],
+            };
+
+          case "browser_switch_frame":
+            const switchResult = await this.browserAutomation.switchFrame({
+              frameSelector: args.frameSelector as string | undefined,
+              frameIndex: args.frameIndex as number | undefined,
+              switchToMain: args.switchToMain as boolean | undefined,
+            });
+            return {
+              content: [{ type: "text", text: switchResult }],
             };
 
           default:
