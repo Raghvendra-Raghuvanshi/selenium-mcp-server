@@ -68,6 +68,8 @@ public class ToolRegistry {
     public void registerBrowserTools() {
         registerTool(new BrowserSnapshotTool());
         registerTool(new BrowserScreenshotTool());
+        registerTool(new BrowserScreenCaptureTool());
+        registerTool(new BrowserFrameSwitchTool());
         registerTool(new BrowserCloseTool());
         registerTool(new BrowserResizeTool());
         registerTool(new BrowserNetworkRequestsTool());

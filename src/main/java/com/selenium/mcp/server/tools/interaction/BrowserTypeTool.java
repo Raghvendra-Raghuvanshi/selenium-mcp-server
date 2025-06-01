@@ -5,20 +5,24 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.selenium.mcp.server.BrowserManager;
 import com.selenium.mcp.server.tools.AbstractTool;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.Keys;
+import com.selenium.mcp.server.tools.browser.ElementFinder;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
 /**
- * Tool to type text into an element.
+ * Tool to type text into elements with enhanced element detection.
  */
 public class BrowserTypeTool extends AbstractTool {
+    private static final Logger logger = LoggerFactory.getLogger(BrowserTypeTool.class);
+    private static final Duration TYPE_TIMEOUT = Duration.ofSeconds(10);
+
     @Override
     public String getName() {
         return "browser_type";
@@ -31,18 +35,7 @@ public class BrowserTypeTool extends AbstractTool {
 
     @Override
     public String getDescription() {
-        return "Type text into editable element";
-    }
-
-    @Override
-    public JsonNode getParameterSchema(ObjectMapper objectMapper) {
-        ObjectNode schema = createParameterSchema(objectMapper, "element", "ref", "text");
-        addStringParameter(schema, "element", "Human-readable element description used to obtain permission to interact with the element", true);
-        addStringParameter(schema, "ref", "Exact target element reference from the page snapshot", true);
-        addStringParameter(schema, "text", "Text to type into the element", true);
-        addBooleanParameter(schema, "submit", "Whether to submit entered text (press Enter after)", false);
-        addBooleanParameter(schema, "slowly", "Whether to type one character at a time. Useful for triggering key handlers in the page. By default entire text is filled in at once.", false);
-        return schema;
+        return "Type text into an element using enhanced element detection";
     }
 
     @Override
@@ -51,15 +44,22 @@ public class BrowserTypeTool extends AbstractTool {
     }
 
     @Override
+    public JsonNode getParameterSchema(ObjectMapper objectMapper) {
+        ObjectNode schema = createParameterSchema(objectMapper);
+        addStringParameter(schema, "element", "Human-readable element description", true);
+        addStringParameter(schema, "ref", "Exact target element reference from the page snapshot", true);
+        addStringParameter(schema, "text", "Text to type into the element", true);
+        addBooleanParameter(schema, "clear", "Whether to clear the element before typing", false);
+        addBooleanParameter(schema, "submit", "Whether to submit the form after typing", false);
+        addBooleanParameter(schema, "force", "Whether to force type even if element is not interactable", false);
+        return schema;
+    }
+
+    @Override
     protected void validateParameters(JsonNode params) throws Exception {
-        if (!params.has("element") || params.get("element").asText().isEmpty()) {
-            throw new IllegalArgumentException("Element description parameter is required");
+        if (!params.has("element") || !params.has("ref")) {
+            throw new IllegalArgumentException("Both element description and reference must be provided");
         }
-        
-        if (!params.has("ref") || params.get("ref").asText().isEmpty()) {
-            throw new IllegalArgumentException("Element reference parameter is required");
-        }
-        
         if (!params.has("text")) {
             throw new IllegalArgumentException("Text parameter is required");
         }
@@ -68,92 +68,68 @@ public class BrowserTypeTool extends AbstractTool {
     @Override
     protected JsonNode executeImpl(JsonNode params, BrowserManager browserManager) throws Exception {
         WebDriver driver = browserManager.getDriver();
-        
-        String elementDesc = params.get("element").asText();
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode result = objectMapper.createObjectNode();
+
         String elementRef = params.get("ref").asText();
         String text = params.get("text").asText();
+        boolean clear = params.has("clear") && params.get("clear").asBoolean();
         boolean submit = params.has("submit") && params.get("submit").asBoolean();
-        boolean slowly = params.has("slowly") && params.get("slowly").asBoolean();
-        
-        logger.info("Typing text into element: {} (ref: {})", elementDesc, elementRef);
-        
-        // Find the element by its reference ID
-        WebElement element = findElementByRef(driver, elementRef);
-        
-        // Scroll the element into view
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element);
-        
-        // Wait for the element to be clickable
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-        wait.until(ExpectedConditions.elementToBeClickable(element));
-        
-        // Clear the element
-        element.clear();
-        
-        // Type the text
-        if (slowly) {
-            // Type character by character
-            for (char c : text.toCharArray()) {
-                element.sendKeys(String.valueOf(c));
-                try {
-                    Thread.sleep(50); // Small delay between characters
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        } else {
-            // Type all at once
-            element.sendKeys(text);
+        boolean force = params.has("force") && params.get("force").asBoolean();
+
+        logger.debug("Finding element to type into: {}", elementRef);
+        WebElement element = ElementFinder.findElement(driver, elementRef);
+
+        if (!force) {
+            // Wait for element to be interactable
+            WebDriverWait wait = new WebDriverWait(driver, TYPE_TIMEOUT);
+            wait.until(ExpectedConditions.elementToBeClickable(element));
         }
-        
-        // Submit if requested
-        if (submit) {
-            element.sendKeys(Keys.ENTER);
-        }
-        
-        // Wait a moment for any page changes
+
         try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-        
-        ObjectMapper objectMapper = new ObjectMapper();
-        return createSimpleResult(objectMapper, "Typed text into element: " + elementDesc);
-    }
-    
-    private WebElement findElementByRef(WebDriver driver, String elementRef) {
-        if (elementRef.startsWith("element-")) {
-            // Extract the element index
-            String indexStr = elementRef.substring("element-".length());
-            try {
-                int index = Integer.parseInt(indexStr);
-                
-                // Find all elements
-                java.util.List<WebElement> allElements = driver.findElements(By.xpath("//*"));
-                
-                // Return the element at the specified index
-                if (index >= 0 && index < allElements.size()) {
-                    return allElements.get(index);
+            if (clear) {
+                if (force) {
+                    // Use JavaScript to clear the element
+                    ((org.openqa.selenium.JavascriptExecutor) driver).executeScript(
+                        "arguments[0].value = '';", element);
+                } else {
+                    element.clear();
                 }
-            } catch (NumberFormatException e) {
-                // Ignore and fall back to XPath
             }
-        }
-        
-        // Fallback: try to find by ID, CSS selector, or XPath
-        try {
-            return driver.findElement(By.id(elementRef));
-        } catch (Exception e1) {
-            try {
-                return driver.findElement(By.cssSelector("[data-ref='" + elementRef + "']"));
-            } catch (Exception e2) {
+
+            if (force) {
+                // Use JavaScript to set the value
+                ((org.openqa.selenium.JavascriptExecutor) driver).executeScript(
+                    "arguments[0].value = arguments[1];", element, text);
+            } else {
+                element.sendKeys(text);
+            }
+
+            if (submit) {
+                element.sendKeys(Keys.RETURN);
+            }
+
+            result.put("message", "Typed text into element: " + params.get("element").asText());
+        } catch (Exception e) {
+            logger.error("Failed to type into element: {}", e.getMessage());
+            if (force) {
+                // Try JavaScript as a last resort
                 try {
-                    return driver.findElement(By.xpath("//*[@data-ref='" + elementRef + "']"));
-                } catch (Exception e3) {
-                    throw new IllegalArgumentException("Could not find element with reference: " + elementRef);
+                    ((org.openqa.selenium.JavascriptExecutor) driver).executeScript(
+                        "arguments[0].value = arguments[1];" + 
+                        (submit ? "arguments[0].form.submit();" : ""), 
+                        element, text);
+                    result.put("message", "Force typed text into element using JavaScript: " + 
+                        params.get("element").asText());
+                } catch (Exception jsError) {
+                    throw new RuntimeException("Failed to type into element even with force option: " + 
+                        jsError.getMessage());
                 }
+            } else {
+                throw e;
             }
         }
+
+        return result;
     }
 }

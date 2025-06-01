@@ -1,12 +1,12 @@
 {
   "name": "selenium-mcp-server",
-  "version": "1.0.1",
-  "description": "Model Context Protocol server for browser automation using Puppeteer - enables LLMs to control web browsers with real automation capabilities",
+  "version": "0.2.0",
+  "description": "Selenium MCP Server with enhanced element detection and improved interaction tools",
   "type": "module",
-  "main": "dist/server.js",
-  "types": "dist/server.d.ts",
+  "main": "index.js",
+  "types": "index.d.ts",
   "bin": {
-    "selenium-mcp-server": "dist/server.js"
+    "selenium-mcp-server": "index.js"
   },
   "scripts": {
     "build": "node scripts/build.js",

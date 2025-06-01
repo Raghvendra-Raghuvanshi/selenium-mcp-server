@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2024-03-19
+
+### Added
+- Enhanced element detection with multiple fallback strategies
+  - Support for finding elements by visible text, partial text, labels, placeholders, ARIA roles, and test IDs
+  - Improved element reference handling with better selectors
+  - Common selector fallbacks for buttons, links, and inputs
+- Improved interaction tools
+  - Enhanced click tool with support for double clicks, right clicks, and force clicks
+  - Improved type tool with better element handling and force typing
+  - Better error handling and recovery mechanisms
+  - JavaScript fallbacks for difficult interactions
+- Better logging and debugging support
+  - Detailed logging of element finding strategies
+  - Improved error messages and stack traces
+  - Debug-level logging for element detection
+
+### Changed
+- Updated element finding logic to be more robust and reliable
+- Improved error handling across all tools
+- Enhanced documentation and code comments
+
 ## [0.1.0] - 2024-05-25
 
 ### Added

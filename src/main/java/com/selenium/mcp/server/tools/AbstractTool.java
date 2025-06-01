@@ -117,6 +117,26 @@ public abstract class AbstractTool implements Tool {
     }
     
     /**
+     * Add an integer parameter to the schema.
+     */
+    protected void addIntegerParameter(ObjectNode schema, String name, String description, boolean required) {
+        ObjectNode properties = (ObjectNode) schema.get("properties");
+        ObjectNode param = properties.putObject(name);
+        param.put("type", "integer");
+        param.put("description", description);
+        
+        if (required) {
+            // Make sure the required array exists
+            if (!schema.has("required")) {
+                schema.putArray("required");
+            }
+            
+            // Add the parameter to the required array
+            schema.withArray("required").add(name);
+        }
+    }
+    
+    /**
      * Add an array parameter to the schema.
      */
     protected void addArrayParameter(ObjectNode schema, String name, String description, String itemType, boolean required) {
