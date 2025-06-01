@@ -110,3 +110,11 @@ selenium-mcp-dist/
 
 # Test files
 test-mcp.js
+test-*.js
+*-test.js
+
+# Screenshots and images
+*.png
+*.jpg
+*.jpeg
+*.gif
