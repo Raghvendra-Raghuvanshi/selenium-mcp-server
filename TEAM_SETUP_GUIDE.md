@@ -1,5 +1,31 @@
 # Selenium MCP Server - Team Setup Guide
 
+## How to Expose Selenium MCP Server for Team Usage
+
+1. **Publish to npm**
+   - Ensure your `package.json` is correct (see below)
+   - Run `npm publish --access public` (or `--access restricted` for private)
+2. **Install globally or use npx**
+   - `npm install -g selenium-mcp-server`
+   - Or use `npx selenium-mcp-server@latest`
+3. **Configure in MCP client**
+   - Add to `.cursor/mcp.json` or your team's config:
+     ```json
+     {
+       "mcpServers": {
+         "selenium": {
+           "command": "selenium-mcp-server",
+           "args": ["--browser", "chrome"]
+         }
+       }
+     }
+     ```
+4. **Share onboarding instructions**
+   - Distribute this guide and config examples to all teams
+   - For CI, run the server as a background process and point clients to its port
+5. **Reference**
+   - See [Playwright MCP](https://github.com/microsoft/playwright-mcp) for a similar team-wide setup model
+
 ## Overview
 
 This guide explains how to set up the Selenium MCP server for your team to use with Cursor for browser automation.

@@ -1,5 +1,29 @@
 # Selenium MCP Server
 
+## 📦 Exposing MCP Server for Team Usage
+
+- **Publish to npm:**
+  - Ensure your `package.json` is correct (see below)
+  - Run `npm publish --access public` (or `--access restricted` for private)
+- **Install globally:**
+  - `npm install -g selenium-mcp-server`
+  - Or use `npx selenium-mcp-server@latest`
+- **Configure in MCP client:**
+  - Add to `.cursor/mcp.json` or your team's config:
+    ```json
+    {
+      "mcpServers": {
+        "selenium": {
+          "command": "selenium-mcp-server",
+          "args": ["--browser", "chrome"]
+        }
+      }
+    }
+    ```
+- **Share onboarding instructions:**
+  - Distribute this README and config examples to all teams
+  - For CI, run the server as a background process and point clients to its port
+
 A Model Context Protocol (MCP) server that provides browser automation capabilities using Selenium WebDriver. This server enables LLMs to interact with web pages through structured accessibility snapshots and browser automation tools.
 
 ## Features

@@ -1,14 +1,79 @@
 # Selenium MCP Server
 
-A Model Context Protocol (MCP) server that provides browser automation capabilities using Puppeteer. This server enables LLMs to interact with web pages through structured accessibility snapshots and real browser automation.
+A Model Context Protocol (MCP) server for browser automation using Selenium WebDriver. Enables LLMs and teams to automate browsers via a standard protocol, similar to Playwright MCP.
 
 ## 🚀 Key Features
 
-- **Real Browser Automation**: Uses Puppeteer for actual browser control (not simulated)
-- **Team-Friendly**: Visible browser by default so teams can see automation in action
-- **MCP Compliant**: Follows MCP standards like Microsoft's Playwright MCP
-- **Local Dependencies**: No global npm installation required
-- **Accessibility-First**: Uses element snapshots for reliable automation
+- Multi-browser support (Chrome, Firefox, Edge, Safari)
+- Team-friendly: visible browser by default
+- MCP-compliant API (navigate, click, type, screenshot, etc.)
+- Easy onboarding for teams and CI
+
+## 📦 Exposing MCP Server for Team Usage
+
+### 1. Publish to npm (for team-wide access)
+
+- Ensure your `package.json` is correct (see below)
+- Run:
+```bash
+npm publish --access public
+```
+- Or for private registry:
+```bash
+npm publish --access restricted
+```
+
+### 2. Install and Run (for any team)
+
+#### Global install (recommended for teams)
+```bash
+npm install -g selenium-mcp-server
+selenium-mcp-server --browser chrome
+```
+
+#### Or use npx (no install needed)
+```bash
+npx selenium-mcp-server@latest --browser chrome
+```
+
+### 3. Configure in MCP Client (e.g., Cursor, CI, or custom)
+
+Add to your `.cursor/mcp.json` or equivalent:
+```json
+{
+  "mcpServers": {
+    "selenium": {
+      "command": "selenium-mcp-server",
+      "args": ["--browser", "chrome"]
+    }
+  }
+}
+```
+
+- For CI, run the server as a background process and point clients to its port.
+
+## 📝 Onboarding for New Teams
+
+1. **Install Node.js 18+ and Java 11+**
+2. **Install the MCP server globally or use npx**
+3. **Share the npm package name and README with your team**
+4. **Provide example configs and usage (see above)**
+5. **For support, use the GitHub repo issues page**
+
+## Example `package.json` for Publishing
+
+```json
+{
+  "name": "selenium-mcp-server",
+  "version": "1.0.0",
+  "description": "Selenium MCP server for browser automation",
+  "main": "index.js",
+  "bin": { "selenium-mcp-server": "index.js" },
+  "repository": { "type": "git", "url": "https://github.com/your-org/selenium-mcp-server.git" },
+  "author": "Your Name",
+  "license": "MIT"
+}
+```
 
 ## 📋 Available Tools
 
@@ -327,3 +392,10 @@ MIT License - see LICENSE file for details.
 - [Playwright MCP](https://github.com/microsoft/playwright-mcp) - Similar server using Playwright
 - [Model Context Protocol](https://modelcontextprotocol.io/) - The protocol specification
 - [Selenium WebDriver](https://selenium.dev/) - The underlying browser automation framework
+
+## References
+- [Playwright MCP](https://github.com/microsoft/playwright-mcp)
+- [npm Publishing Guide](https://docs.npmjs.com/packages-and-modules/contributing-packages-to-the-registry)
+- [Model Context Protocol](https://modelcontextprotocol.io/)
+
+## For more, see CONTRIBUTING.md and TEAM_SETUP_GUIDE.md

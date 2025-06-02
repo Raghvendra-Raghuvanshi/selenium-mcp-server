@@ -1,7 +1,7 @@
 {
   "name": "selenium-mcp-server",
-  "version": "0.2.0",
-  "description": "Selenium MCP Server with enhanced element detection and improved interaction tools",
+  "version": "1.0.2",
+  "description": "Selenium MCP server for browser automation, team-ready, MCP-compliant, and easy to share like Playwright MCP.",
   "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
@@ -32,7 +32,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Raghvendra-Raghuvanshi/selenium-mcp-server.git"
+    "url": "https://github.com/Raghvendra-Raghuvanshi/selenium-mcp-server.git"
   },
   "bugs": {
     "url": "https://github.com/Raghvendra-Raghuvanshi/selenium-mcp-server/issues"
