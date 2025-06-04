@@ -1,12 +1,12 @@
 {
   "name": "selenium-mcp-server",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Selenium MCP server for browser automation, team-ready, MCP-compliant, and easy to share like Playwright MCP.",
   "type": "module",
   "main": "index.js",
   "types": "index.d.ts",
   "bin": {
-    "selenium-mcp-server": "index.js"
+    "selenium-mcp-server": "dist/index.js"
   },
   "scripts": {
     "build": "node scripts/build.js",
